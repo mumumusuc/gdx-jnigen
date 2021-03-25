@@ -179,6 +179,7 @@ public class NativeCodeGenerator {
 	private static final String JNI_ARG_PREFIX = "obj_";
 	private static final String JNI_RETURN_VALUE = "JNI_returnValue";
 	private static final String JNI_WRAPPER_PREFIX = "wrapped_";
+	private final boolean allowCritical;
 	FileDescriptor sourceDir;
 	String classpath;
 	FileDescriptor jniDir;
@@ -188,6 +189,14 @@ public class NativeCodeGenerator {
 	JavaMethodParser javaMethodParser = new RobustJavaMethodParser();
 	CMethodParser cMethodParser = new JniHeaderCMethodParser();
 	CMethodParserResult cResult;
+
+	public NativeCodeGenerator(boolean allowCritical) {
+		this.allowCritical = allowCritical;
+	}
+
+	public NativeCodeGenerator() {
+		this(true);
+	}
 
 	/** Generates .h/.cpp files from the Java files found in "src/", with their .class files being in "bin/". The generated files
 	 * will be stored in "jni/". All paths are relative to the applications working directory.
@@ -583,8 +592,11 @@ public class NativeCodeGenerator {
 		for (Argument arg : javaMethod.getArguments()) {
 			if (arg.getType().isPrimitiveArray()) {
 				String type = arg.getType().getArrayCType();
-				buffer.append("\t" + type + " " + arg.getName() + " = (" + type + ")env->GetPrimitiveArrayCritical(" + JNI_ARG_PREFIX
-					+ arg.getName() + ", 0);\n");
+				if (allowCritical) {
+					buffer.append("\t" + type + " " + arg.getName() + " = (" + type + ")env->GetPrimitiveArrayCritical(" + JNI_ARG_PREFIX + arg.getName() + ", 0);\n");
+				} else {
+					buffer.append("\t" + type + " " + arg.getName() + " = (" + type + ")env->" + arg.getType().getArrayGetMethod() + "(" + JNI_ARG_PREFIX + arg.getName() + ", 0);\n");
+				}
 				additionalArgs.append(", ");
 				additionalArgs.append(type);
 				additionalArgs.append(" ");
@@ -602,8 +614,11 @@ public class NativeCodeGenerator {
 		// emit cleanup code for arrays, must come first
 		for (Argument arg : javaMethod.getArguments()) {
 			if (arg.getType().isPrimitiveArray()) {
-				buffer.append("\tenv->ReleasePrimitiveArrayCritical(" + JNI_ARG_PREFIX + arg.getName() + ", " + arg.getName()
-					+ ", 0);\n");
+				if (allowCritical) {
+					buffer.append("\tenv->ReleasePrimitiveArrayCritical(" + JNI_ARG_PREFIX + arg.getName() + ", " + arg.getName() + ", 0);\n");
+				} else {
+					buffer.append("\tenv->" + arg.getType().getArrayReleaseMethod() + "(" + JNI_ARG_PREFIX + arg.getName() + ", (" + arg.getType().getArrayJniType() + ")" + arg.getName() + ", JNI_OK);\n");
+				}
 			}
 		}
 

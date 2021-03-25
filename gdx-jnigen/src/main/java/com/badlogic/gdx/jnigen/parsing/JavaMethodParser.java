@@ -119,6 +119,45 @@ public interface JavaMethodParser {
 			throw new RuntimeException("Unknown Array type " + this);
 		}
 
+		public String getArrayJniType () {
+			if (!this.isPrimitiveArray()) throw new RuntimeException("ArgumentType " + this + " is not an Array!");
+			if (this == BooleanArray) return "jboolean*";
+			if (this == ByteArray) return "jbyte*";
+			if (this == CharArray) return "jchar*";
+			if (this == ShortArray) return "jshort*";
+			if (this == IntegerArray) return "jint*";
+			if (this == LongArray) return "jlong*";
+			if (this == FloatArray) return "jfloat*";
+			if (this == DoubleArray) return "jdouble*";
+			throw new RuntimeException("Unknown Array type " + this);
+		}
+
+		public String getArrayGetMethod(){
+			if (!this.isPrimitiveArray()) throw new RuntimeException("ArgumentType " + this + " is not an Array!");
+			if (this == BooleanArray) return "GetBooleanArrayElements";
+			if (this == ByteArray) return "GetByteArrayElements";
+			if (this == CharArray) return "GetCharArrayElements";
+			if (this == ShortArray) return "GetShortArrayElements";
+			if (this == IntegerArray) return "GetIntArrayElements";
+			if (this == LongArray) return "GetLongArrayElements";
+			if (this == FloatArray) return "GetFloatArrayElements";
+			if (this == DoubleArray) return "GetDoubleArrayElements";
+			throw new RuntimeException("Unknown Array type " + this);
+		}
+
+		public String getArrayReleaseMethod(){
+			if (!this.isPrimitiveArray()) throw new RuntimeException("ArgumentType " + this + " is not an Array!");
+			if (this == BooleanArray) return "ReleaseBooleanArrayElements";
+			if (this == ByteArray) return "ReleaseByteArrayElements";
+			if (this == CharArray) return "ReleaseCharArrayElements";
+			if (this == ShortArray) return "ReleaseShortArrayElements";
+			if (this == IntegerArray) return "ReleaseIntArrayElements";
+			if (this == LongArray) return "ReleaseLongArrayElements";
+			if (this == FloatArray) return "ReleaseFloatArrayElements";
+			if (this == DoubleArray) return "ReleaseDoubleArrayElements";
+			throw new RuntimeException("Unknown Array type " + this);
+		}
+
 		public String getJniType () {
 			return jniType;
 		}
